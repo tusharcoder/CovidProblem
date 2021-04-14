@@ -188,7 +188,7 @@ def list_patients(type_of_bed):
     cursor = connection.cursor()
     cursor.execute(sql)
     beds = cursor.fetchall()
-    click.echo(click.style("bedno bedtype patient_name",bold=True))
+    click.echo(click.style("bedno bedtype patient_name patient_id",bold=True))
     for bed in beds:
         click.echo("{} {} {} {}".format(bed[0],bed[1], bed[2], bed[3]),nl=True)
     if not beds:
@@ -201,25 +201,47 @@ def patient_checkout(patient_id):
     """
     patient checkout
     free the occupied bed
-    input: bed_number
+    input: patient_id
     """
     if patient_id is None:
         click.echo(click.style("patiend id is required. See help for usage",fg="red"))
         exit()
-    sql = "SELECT * FROM bed WHERE user=?"
+    sql = "SELECT id FROM bed WHERE user=?"
     cursor = connection.cursor()
     cursor.execute(sql,(patient_id,))
     try:
-        row = cursor.fetchone()[0]
-        bed_number = row.id
+        rec = cursor.fetchone()
+        bed_number = rec[0]
     except:
         click.echo(click.style("Invalid patient Id or patient already released",fg="red"))
         exit()
     sql = "UPDATE bed SET user=?,is_occupied=0 where id=?"
     cursor.execute(sql,(None,bed_number))
     connection.commit()
-    click.echo(click.style("patient discharged and bed number {} is free now for admit another patient",fg="green"))
+    click.echo(click.style("patient discharged and bed number {} is free now for admit another patient".format(bed_number),fg="green"))
+    
 
+@cli.command()
+@click.option("--bed_number","-b")
+def bed_status(bed_number):
+    """
+    check the status of the bed
+    input: bed_number
+    """
+    if bed_number is None:
+        click.echo(click.style("bed_number is required. See help for usage",fg="red"))
+        exit()
+    sql = "SELECT b.id as bed_number, b.type_of_bed as type_of_bed, b.is_occupied as is_occupied, u.name as patient_name, u.id as patient_id FROM bed b left join user u on b.user=u.id WHERE b.id=?"
+    cursor = connection.cursor()
+    cursor.execute(sql,(bed_number,))
+    click.echo(click.style("bedno bedtype status patientname patientid"))
+    try:
+        row = cursor.fetchone()
+        click.echo("{} {} {} {} {}".format(row[0],row[1],"occupied" if row[2] else "empty", row[3] or "NA",row[4] or "NA"))
+    except Exception as e:
+        click.echo(e)
+        click.echo(click.style("Invalid bed_number", fg="red"))
+        exit()
 
 
 if __name__ == "__main__":
