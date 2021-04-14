@@ -169,5 +169,31 @@ def list_patients():
     """
     pass
 
+@cli.command()
+@click.option("--patient_id","-p")
+def free_bed(patient_id):
+    """
+    free the occupied bed
+    input bed_number
+    """
+    if patient_id is None:
+        click.echo(click.style("patiend id is required. See help for usage",fg="red"))
+        exit()
+    sql = "SELECT * FROM bed WHERE user=?"
+    cursor = connection.cursor()
+    cursor.execute(sql,(patient_id,))
+    try:
+        row = cursor.fetchone()[0]
+        bed_number = row.id
+    except:
+        click.echo(click.style("Invalid patient Id or patient already released",fg="red"))
+        exit()
+    sql = "UPDATE bed SET user=?,is_occupied=0 where id=?"
+    cursor.execute(sql,(None,bed_number))
+    connection.commit()
+    click.echo(click.style("patient discharged and bed number {} is free now for admit another patient",fg="green"))
+
+
+
 if __name__ == "__main__":
     cli()
