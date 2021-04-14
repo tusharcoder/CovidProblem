@@ -119,6 +119,8 @@ def assign_bed():
     cursor.execute(sql,(user_id,bed_number))
     connection.commit()
     click.echo(click.style("Patient {} assigned a bed number {}".format(name_of_patient,bed_number),fg="green"))
+    cursor.close()
+    connection.close()
 
 
 @cli.command()
@@ -155,6 +157,9 @@ def list_beds(type_of_bed):
     click.echo(click.style("bedno bedtype status",bold=True))
     for bed in beds:
         click.echo("{} {} {}".format(bed[0],bed[1],"occupied" if bed[2] else "empty"),nl=True)
+    cursor.close()
+    connection.close()
+
 
 
 @cli.command()
@@ -193,7 +198,9 @@ def list_patients(type_of_bed):
         click.echo("{} {} {} {}".format(bed[0],bed[1], bed[2], bed[3]),nl=True)
     if not beds:
         click.echo(click.style("No Patients assigned",fg="red"))
-    
+    cursor.close()
+    connection.close()
+
 
 @cli.command()
 @click.option("--patient_id","-p")
@@ -219,7 +226,9 @@ def patient_checkout(patient_id):
     cursor.execute(sql,(None,bed_number))
     connection.commit()
     click.echo(click.style("patient discharged and bed number {} is free now for admit another patient".format(bed_number),fg="green"))
-    
+    cursor.close()
+    connection.close()
+
 
 @cli.command()
 @click.option("--bed_number","-b")
@@ -242,7 +251,8 @@ def bed_status(bed_number):
         click.echo(e)
         click.echo(click.style("Invalid bed_number", fg="red"))
         exit()
-
+    cursor.close()
+    connection.close()
 
 if __name__ == "__main__":
     cli()
