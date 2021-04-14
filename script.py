@@ -158,7 +158,8 @@ def list_beds(type_of_bed):
 
 
 @cli.command()
-def list_patients():
+@click.option("--type_of_bed",'-t',default=3,help="type of the bed, 3 is default")
+def list_patients(type_of_bed):
     """
     list the patients which opt for the specific type of the bed\n
     inputs:\n
@@ -167,14 +168,40 @@ def list_patients():
             enter 1 for semi-private,\n
             enter 2 for private\n
     """
-    pass
+    sql = """
+    SELECT b.id, b.type_of_bed, u.name, u.id FROM bed b inner join user u on b.user=u.id where {}
+    """
+    mapping = {
+                0:"general",
+                1:"semi-private",
+                2:"private",
+                3:1
+           }
+    if type_of_bed == 3:
+        condition = 1
+    elif type_of_bed > 3:
+        click.echo(click.style("Invalid option for type_of_bed, valied options are 0/1/2/3",fg="red"))
+        exit()
+    else:
+        condition  = "b.type_of_bed = '{}'".format(mapping.get(type_of_bed))
+    sql=sql.format(condition)
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    beds = cursor.fetchall()
+    click.echo(click.style("bedno bedtype patient_name",bold=True))
+    for bed in beds:
+        click.echo("{} {} {} {}".format(bed[0],bed[1], bed[2], bed[3]),nl=True)
+    if not beds:
+        click.echo(click.style("No Patients assigned",fg="red"))
+    
 
 @cli.command()
 @click.option("--patient_id","-p")
-def free_bed(patient_id):
+def patient_checkout(patient_id):
     """
+    patient checkout
     free the occupied bed
-    input bed_number
+    input: bed_number
     """
     if patient_id is None:
         click.echo(click.style("patiend id is required. See help for usage",fg="red"))
